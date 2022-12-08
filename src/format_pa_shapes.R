@@ -3,6 +3,7 @@
 library(sf)
 library(dplyr)
 library(fuzzyjoin)
+library(glue)
 
 setwd('/home/freddie/Cloud_Free_Metrics/PA_paper/shapefiles/to_combine/')
 
@@ -124,4 +125,4 @@ comb_shp_dat_dropped <- comb_shp_dat %>%
 comb_shp_dat_dropped_rn <- comb_shp_dat_dropped %>%
   rename(TH_legal= TH_legal.x) %>% rename(livest_legal = livest_legal.x) %>% rename(og_file = og_file.x)
 
-st_write(comb_shp_dat_dropped_rn, glue('formatted_pa_shapefiles/combined_formatted_PAs_{Sys.Date()}.geojson'), glue('combined_formatted_PAs_{Sys.Date()}'), driver = 'GeoJSON')
+st_write(comb_shp_dat_dropped_rn, glue('combined_formatted_PAs_{Sys.Date()}.geojson'), glue('combined_formatted_PAs_{Sys.Date()}'), driver = 'GeoJSON')
