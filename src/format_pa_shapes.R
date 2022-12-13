@@ -2,8 +2,11 @@
 
 library(sf)
 library(dplyr)
+library(fuzzyjoin)
 
 setwd('/home/freddie/Cloud_Free_Metrics/PA_paper/data/')
+
+# not used anymore (30 nov 2022)
 do_fuzzy = FALSE # Do not change to true. Code to show working. 
 
 if (do_fuzzy == TRUE) {
@@ -52,20 +55,25 @@ if (do_fuzzy == TRUE) {
   # At this point qgis was used to manually remove any PAs in ruth data set that overlap with Tz data set. 
 }
 
-
-comb_shp <- st_read('formatted_pa_shapefiles/ruth_data_tz_removed.geojson')
+comb_shp <- st_read('/home/freddie/Cloud_Free_Metrics/PA_paper/data/fwpamastershapefile/PAs_MasterFile_FEB2021.shp')
+comb_shp$og_file <- 'PAs_MasterFile_FEB2021.shp'
+ma_dat <- comb_shp %>% st_drop_geometry()
 
 # shapefiles to merge 
+tz_file = 'additional_shapefiles/Files/tz_all_pa_09052019/tz_all_pa_09052019.shp'
 flist <- list.files('additional_shapefiles/Files/selected/Additional_hunting_pas_per_country/', pattern = 'geojson', full.names = TRUE)
-
+flist[6] <- tz_file
+file = flist[6]
 for (file in flist){
   
   print(file)
   shp <- st_read(file) %>% st_transform(st_crs(comb_shp))
   shp <- st_zm(shp)
   if (basename(file) == 'keconservnacies.geojson') { 
-    shp$TH_legal <- 0} else if (grepl(basename('selected_tz'), file)) {
-      shp$TH_legal <- NA
+    shp$TH_legal <- 0}  else if (basename(file) == 'tz_all_pa_09052019.shp') {
+        shp$HuntArea <- as.character(shp$HuntArea)
+        shp$TH_legal <- 0
+        shp$TH_legal[shp$HuntArea == "Yes"] <- 1
     } else {
       shp$TH_legal <- 1
     }
@@ -76,6 +84,5 @@ for (file in flist){
 }
 
 # add back in Ruth data
-ma_dat <- comb_shp %>% st_drop_geometry()
-comb_shp_dat <- merge(comb_shp, ma_dat)
-st_write(comb_shp, 'formatted_pa_shapefiles/combined_formatted_PAs_v1_4_nov_22.geojson', 'combined_formatted_PAs_v1_4_nov_22', driver = 'GeoJSON')
+comb_shp_dat <- sp::merge(comb_shp, ma_dat, all.x = TRUE, all.y = TRUE, by= 'NAME')
+st_write(comb_shp_dat, 'formatted_pa_shapefiles/combined_formatted_PAs_v2_30_nov_22.geojson', 'combined_formatted_PAs_v2_30_nov_22', driver = 'GeoJSON')
